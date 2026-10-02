@@ -1,0 +1,51 @@
+[project]
+name = "cmn-c2-289"
+version = "0.1.0"
+description = "AppierCampaignAgent — AgentCore Template"
+requires-python = ">=3.11"
+# The framework (agenticstar-agentcore) is NOT a public-PyPI dependency; it is
+# provided by CI per repository generation — a stub package on PYTHONPATH for older repos,
+# or installed from the package registry for wheel-era repos (see the dual-mode
+# run-tests job in the pipeline definition). Pinning it here would make `pip install -e .`
+# fail because it is not resolvable from the default index.
+dependencies = [
+    "agenticstar-agentcore[marketplace,openai]==1.0.3",]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.0.3",
+    "pytest-cov==5.0.0",
+    "pytest-asyncio==1.4.0",
+    "ruff==0.4.4",
+    "mypy==1.10.0",
+    "types-PyYAML==6.0.12.20260815",
+]
+
+[build-system]
+requires = ["setuptools==68.2.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+# The framework wheel ships no type information, so every framework symbol
+# resolves to Any. Without these two settings strict mode rejects the whole
+# template on that alone: subclassing an untyped base, and importing it.
+disallow_subclassing_any = false
+exclude = ["src/examples/"]
+
+[[tool.mypy.overrides]]
+module = ["framework.*", "shared.*", "langgraph.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Same cause, different symptom: because AgentState itself resolves to Any,
+# every field of a TypedDict that extends it fails `valid-type`. The errors are
+# one cause, not one per field, so they are silenced at the module rather than
+# chased individually.
+module = ["src.schemas.state"]
+disable_error_code = ["valid-type"]
